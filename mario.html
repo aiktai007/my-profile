@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mini Mario Clone</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #5c94fc; font-family: sans-serif; }
+        canvas { display: block; background: #5c94fc; }
+        .controls { position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: space-around; }
+        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white; user-select: none; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="controls">
+        <div class="btn" id="leftBtn">⬅️</div>
+        <div class="btn" id="jumpBtn">⬆️</div>
+        <div class="btn" id="rightBtn">➡️</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const gravity = 0.8;
+        const player = {
+            x: 50, y: 100, width: 30, height: 30,
+            velX: 0, velY: 0, speed: 5, jumpStrength: -15, grounded: false
+        };
+
+        const platforms = [
+            { x: 0, y: canvas.height - 40, w: canvas.width, h: 40 }, // Ground
+            { x: 100, y: canvas.height - 120, w: 100, h: 20 },
+            { x: 250, y: canvas.height - 200, w: 100, h: 20 },
+            { x: 150, y: canvas.height - 280, w: 100, h: 20 }
+        ];
+
+        let keys = { left: false, right: false, up: false };
+
+        // Touch Controls
+        document.getElementById("leftBtn").ontouchstart = () => keys.left = true;
+        document.getElementById("leftBtn").ontouchend = () => keys.left = false;
+        document.getElementById("rightBtn").ontouchstart = () => keys.right = true;
+        document.getElementById("rightBtn").ontouchend = () => keys.right = false;
+        document.getElementById("jumpBtn").ontouchstart = () => { if(player.grounded) player.velY = player.jumpStrength; };
+
+        function update() {
+            if (keys.left) player.velX = -player.speed;
+            else if (keys.right) player.velX = player.speed;
+            else player.velX = 0;
+
+            player.velY += gravity;
+            player.x += player.velX;
+            player.y += player.velY;
+
+            player.grounded = false;
+            for (let plat of platforms) {
+                if (player.x < plat.x + plat.w && player.x + player.width > plat.x &&
+                    player.y < plat.y + plat.h && player.y + player.height > plat.y) {
+                    
+                    if (player.velY > 0) { // Landing on platform
+                        player.grounded = true;
+                        player.velY = 0;
+                        player.y = plat.y - player.height;
+                    }
+                }
+            }
+
+            // Screen boundaries
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Platforms
+            ctx.fillStyle = "#8b4513";
+            platforms.forEach(plat => ctx.fillRect(plat.x, plat.y, plat.w, plat.h));
+
+            // Draw Player (Mario)
+            ctx.fillStyle = "red";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            update();
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>
