@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Gold Game</title>
+    <style>
+        body { margin: 0; text-align: center; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; }
+        canvas { background: #000; display: block; margin: 0 auto; border: 3px solid #ffd700; max-width: 100%; touch-action: none; }
+        .ui { position: absolute; top: 10px; width: 100%; pointer-events: none; }
+        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; }
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; user-select: none; pointer-events: auto; }
+    </style>
+</head>
+<body>
+    <div class="ui">Score: <span id="score">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="controls">
+        <div class="btn" id="leftBtn">⬅️</div>
+        <div class="btn" id="rightBtn">➡️</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 150;
+
+        let score = 0;
+        let player = { x: canvas.width / 2 - 25, y: canvas.height - 60, width: 50, height: 50, speed: 7 };
+        let items = [];
+
+        // Controls
+        let moveLeft = false;
+        let moveRight = false;
+
+        document.getElementById("leftBtn").ontouchstart = () => moveLeft = true;
+        document.getElementById("leftBtn").ontouchend = () => moveLeft = false;
+        document.getElementById("rightBtn").ontouchstart = () => moveRight = true;
+        document.getElementById("rightBtn").ontouchend = () => moveRight = false;
+
+        function spawnItem() {
+            items.push({
+                x: Math.random() * (canvas.width - 30),
+                y: 0,
+                size: 30,
+                speed: Math.random() * 3 + 2
+            });
+        }
+
+        function update() {
+            if (moveLeft && player.x > 0) player.x -= player.speed;
+            if (moveRight && player.x < canvas.width - player.width) player.x += player.speed;
+
+            items.forEach((item, index) => {
+                item.y += item.speed;
+
+                // Catch detection
+                if (item.y + item.size > player.y && item.x > player.x && item.x < player.x + player.width) {
+                    items.splice(index, 1);
+                    score += 10;
+                    scoreElement.innerText = score;
+                }
+
+                if (item.y > canvas.height) items.splice(index, 1);
+            });
+
+            if (Math.random() < 0.03) spawnItem();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Player (အစိမ်းရောင် အတုံးလေး)
+            ctx.fillStyle = "#00ff00";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Items (ရွှေရောင် အဝိုင်းလေးများ)
+            ctx.fillStyle = "#ffd700";
+            items.forEach(item => {
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, item.size/2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            update();
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>
