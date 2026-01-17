@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shimhkam Pro Profile</title>
+    <style>
+        /* CSS Variables - အလင်း/အမှောင် ပြောင်းဖို့အတွက် */
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --header-grad: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #eeeeee;
+            --header-grad: linear-gradient(135deg, #2c3e50, #000000);
+        }
+
+        body { font-family: sans-serif; margin: 0; background: var(--bg-color); color: var(--text-color); transition: 0.3s; text-align: center; }
+        
+        /* Dark Mode Button */
+        .theme-switch { position: fixed; top: 20px; right: 20px; z-index: 100; background: rgba(255,255,255,0.2); border: none; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+
+        header { 
+            background: var(--header-grad); 
+            color: white; padding: 60px 20px; 
+            border-bottom-left-radius: 50px; border-bottom-right-radius: 50px;
+        }
+
+        .profile-img { 
+            width: 150px; height: 150px; border-radius: 50%; border: 5px solid white; 
+            margin-bottom: 15px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .container { padding: 30px 15px; max-width: 600px; margin: auto; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 25px; text-align: left; transition: 0.3s; }
+        
+        .btn { display: block; background: #ff0050; color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; text-align: center; margin-top: 10px; }
+
+        /* Music Player Style */
+        .music-box { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px; margin-top: 15px; display: flex; align-items: center; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <button class="theme-switch" onclick="toggleTheme()">🌓</button>
+
+    <header>
+        <img src="IMG_20260116_224055.jpg" alt="Shimhkam" class="profile-img">
+        <h1>Shimhkam</h1>
+        <p>Web Developer & Music Lover</p>
+        
+        <div class="music-box" style="justify-content: center;">
+            <span id="music-status">🎵 Music Off</span>
+            <button onclick="playMusic()" style="background: white; border: none; border-radius: 5px; cursor: pointer;">Play/Pause</button>
+            <audio id="myAudio" loop>
+                <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            </audio>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>ကျွန်တော့်အကြောင်း</h2>
+            <p>ကျွန်တော်က နည်းပညာနဲ့ အနုပညာကို ပေါင်းစပ်ရတာ ကြိုက်တဲ့ Shimhkam ပါ။ ဒီ Website ကတော့ ကျွန်တော့်ရဲ့ ဒုတိယမြောက် ဖန်တီးမှု ဖြစ်ပါတယ်။</p>
+        </div>
+
+        <div class="card">
+            <h2>ကျွန်တော့်ရဲ့ Project</h2>
+            <a href="https://aiktai007.github.io/live-sim/" class="btn" target="_blank">📺 Live Simulator ကိုကြည့်ရန်</a>
+        </div>
+    </div>
+
+    <script>
+        // ၁။ Dark Mode လုပ်ဆောင်ချက်
+        function toggleTheme() {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        // ၂။ Music Player လုပ်ဆောင်ချက်
+        const audio = document.getElementById("myAudio");
+        const status = document.getElementById("music-status");
+        
+        function playMusic() {
+            if (audio.paused) {
+                audio.play();
+                status.innerText = "🎶 Music Playing...";
+            } else {
+                audio.pause();
+                status.innerText = "🎵 Music Paused";
+            }
+        }
+    </script>
+</body>
+</html>
