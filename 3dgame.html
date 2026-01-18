@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shimhkam 3D Starter</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        #info { position: absolute; top: 10px; color: white; width: 100%; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="info">3D Game စမ်းသပ်ချက် (Arrow Keys နဲ့ ရွှေ့ပါ)</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ၁။ Scene, Camera, Renderer တည်ဆောက်ခြင်း
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // ၂။ 3D အတုံး (Cube) ပြုလုပ်ခြင်း
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshStandardMaterial({ color: 0x00f2ff });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        // ၃။ အလင်းရောင်ထည့်ခြင်း
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040)); // အခြေခံအလင်း
+
+        camera.position.z = 5;
+
+        // ၄။ လှုပ်ရှားမှု ထိန်းချုပ်ခြင်း
+        document.addEventListener('keydown', (e) => {
+            if(e.key === "ArrowLeft") cube.position.x -= 0.1;
+            if(e.key === "ArrowRight") cube.position.x += 0.1;
+            if(e.key === "ArrowUp") cube.position.y += 0.1;
+            if(e.key === "ArrowDown") cube.position.y -= 0.1;
+        });
+
+        // ၅။ Game Loop (အမြဲတမ်း Render လုပ်နေဖို့)
+        function animate() {
+            requestAnimationFrame(animate);
+            cube.rotation.x += 0.01; // အတုံးလေး လည်နေအောင်လုပ်ခြင်း
+            cube.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
