@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shimhkam 3D Nature Walk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; overflow: hidden; background: #87CEEB; }
+        #ui { position: absolute; top: 10px; width: 100%; text-align: center; color: white; font-family: sans-serif; text-shadow: 2px 2px 4px #000; pointer-events: none; z-index: 10; }
+    </style>
+</head>
+<body>
+    <div id="ui">နေထွက်ချိန် တောင်ကုန်းပေါ် လမ်းလျှောက်နေသော Man နှင့် Woman</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // မနက်ခင်းကောင်းကင်ပြာ
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // အရိပ်တွေပေါ်အောင်ဖွင့်
+        document.body.appendChild(renderer.domElement);
+
+        // အလင်းရောင် (နေထွက်စ နေရောင်ခြည်)
+        const sunLight = new THREE.DirectionalLight(0xffccaa, 1.5); // နေရောင်ခြည် နွေးနွေးထွေးထွေး
+        sunLight.position.set(20, 10, 15); // နေထွက်တဲ့နေရာ
+        sunLight.castShadow = true; // အရိပ်ကျအောင်လုပ်
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 50;
+        sunLight.shadow.camera.left = -20;
+        sunLight.shadow.camera.right = 20;
+        sunLight.shadow.camera.top = 20;
+        sunLight.shadow.camera.bottom = -20;
+        scene.add(sunLight);
+        scene.add(new THREE.AmbientLight(0x555555)); // ပတ်ဝန်းကျင်အလင်း
+
+        // မြေပြင် + တောင်ကုန်းများ
+        const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50); // အပိုင်းအစများစွာနဲ့ မြေပြင်
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x32a852, flatShading: true });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true; // မြေပြင်ပေါ်မှာ အရိပ်ကျအောင်
+        scene.add(ground);
+
+        // တောင်ကုန်းပုံစံဖန်တီးခြင်း
+        const vertices = ground.geometry.attributes.position.array;
+        for (let i = 0; i < vertices.length; i += 3) {
+            const y = vertices[i + 1];
+            // အလယ်နားလေးမှာ တောင်ကုန်းဖြစ်အောင်
+            const distance = Math.sqrt(vertices[i] * vertices[i] + vertices[i+2] * vertices[i+2]);
+            if (distance < 20) { // အချင်းဝက် 20 အတွင်း
+                vertices[i + 1] = y + Math.sin(distance * 0.5) * 2 - (distance * 0.1);
+            }
+        }
+        ground.geometry.attributes.position.needsUpdate = true;
+        ground.geometry.computeVertexNormals();
+
+        // သစ်ပင်ဖန်တီးမည့် Function
+        function createTree(x, z) {
+            const treeGroup = new THREE.Group();
+            // ပင်စည်
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+            trunk.position.set(x, 0.4, z);
+            trunk.castShadow = true;
+            trunk.receiveShadow = true;
+            treeGroup.add(trunk);
+            // အပင်ခေါင်း
+            const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.8, 8), new THREE.MeshStandardMaterial({ color: 0x228B22 }));
+            leaves.position.set(x, 1.2, z);
+            leaves.castShadow = true;
+            leaves.receiveShadow = true;
+            treeGroup.add(leaves);
+            return treeGroup;
+        }
+
+        // သစ်ပင်တွေ နေရာချထားခြင်း (Random နေရာများ)
+        for (let i = 0; i < 15; i++) {
+            const x = Math.random() * 40 - 20;
+            const z = Math.random() * 40 - 20;
+            scene.add(createTree(x, z));
+        }
+
+        // လူပုံစံဖန်တီးမည့် Function (အရင်ကအတိုင်း)
+        function createPerson(skin, shirt) {
+            const bodyGroup = new THREE.Group();
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), new THREE.MeshStandardMaterial({color: skin}));
+            head.position.y = 1.5;
+            head.castShadow = true;
+            bodyGroup.add(head);
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.25), new THREE.MeshStandardMaterial({color: shirt}));
+            torso.position.y = 1.05;
+            torso.castShadow = true;
+            bodyGroup.add(torso);
+            const legGeo = new THREE.BoxGeometry(0.15, 0.7, 0.15);
+            const legMat = new THREE.MeshStandardMaterial({color: 0x333333});
+            const lLeg = new THREE.Mesh(legGeo, legMat);
+            lLeg.position.set(-0.12, 0.35, 0);
+            lLeg.castShadow = true;
+            bodyGroup.add(lLeg);
+            const rLeg = new THREE.Mesh(legGeo, legMat);
+            rLeg.position.set(0.12, 0.35, 0);
+            rLeg.castShadow = true;
+            bodyGroup.add(rLeg);
+            return { mesh: bodyGroup, lLeg, rLeg };
+        }
+
+        const man = createPerson(0xffdbac, 0x0055ff);
+        man.mesh.position.set(-0.6, 0, 0);
+        scene.add(man.mesh);
+
+        const woman = createPerson(0xffdbac, 0xff33aa);
+        woman.mesh.position.set(0.6, 0, 0);
+        scene.add(woman.mesh);
+
+        camera.position.set(0, 3, 6);
+        camera.lookAt(0, 1, 0);
+
+        let t = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            t += 0.05;
+
+            // Walking movement
+            man.lLeg.rotation.x = Math.sin(t) * 0.6;
+            man.rLeg.rotation.x = -Math.sin(t) * 0.6;
+            woman.lLeg.rotation.x = -Math.sin(t) * 0.6;
+            woman.rLeg.rotation.x = Math.sin(t) * 0.6;
+
+            // Move forward and stay on ground
+            man.mesh.position.z -= 0.03;
+            woman.mesh.position.z -= 0.03;
+
+            // Simple "stay on ground" logic (for basic terrain)
+            man.mesh.position.y = Math.sin(man.mesh.position.z * 0.2) * 0.1; 
+            woman.mesh.position.y = Math.sin(woman.mesh.position.z * 0.2) * 0.1;
+
+            camera.position.z = man.mesh.position.z + 6;
+            camera.lookAt(man.mesh.position.x, 1, man.mesh.position.z);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
