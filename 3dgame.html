@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shimhkam Final 3D World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style> body { margin: 0; overflow: hidden; background: #87CEEB; } </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // ၁။ နေမင်းကြီး (Sun)
+        const sunGeo = new THREE.SphereGeometry(2, 32, 32);
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+        const sun = new THREE.Mesh(sunGeo, sunMat);
+        sun.position.set(15, 15, -20);
+        scene.add(sun);
+
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 20, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x606060));
+
+        // ၂။ တောင်ကုန်းနှင့် ရေကန် (Hills & Lake)
+        const groundGeo = new THREE.PlaneBufferGeometry(100, 100, 40, 40);
+        const vertices = groundGeo.attributes.position.array;
+        for (let i = 0; i < vertices.length; i += 3) {
+            let x = vertices[i], z = vertices[i+1];
+            // အလယ်နားမှာ ရေကန်ဖြစ်အောင် ချိုင့်ခွက်လုပ်ခြင်း
+            let dist = Math.sqrt(x*x + z*z);
+            if(dist < 5) vertices[i+2] = -0.5; 
+            else vertices[i+2] = Math.sin(x * 0.3) * 1.2;
+        }
+        const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({color: 0x32a852, flatShading: true}));
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+
+        const water = new THREE.Mesh(new THREE.CircleGeometry(5, 32), new THREE.MeshStandardMaterial({color: 0x00aaff, transparent: true, opacity: 0.8}));
+        water.rotation.x = -Math.PI / 2;
+        water.position.y = -0.2;
+        scene.add(water);
+
+        // ၃။ အိမ်ကလေး (House)
+        function createHouse(x, z) {
+            const house = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 2), new THREE.MeshStandardMaterial({color: 0xeeeeee}));
+            base.position.y = 0.75;
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(1.8, 1, 4), new THREE.MeshStandardMaterial({color: 0xaa0000}));
+            roof.position.y = 2;
+            roof.rotation.y = Math.PI / 4;
+            house.add(base); house.add(roof);
+            house.position.set(x, 0, z);
+            scene.add(house);
+        }
+        createHouse(0, -15); // လမ်းဆုံးမှာ အိမ်ထားခြင်း
+
+        // သစ်ပင်များ
+        function createTree(x, z) {
+            const group = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1), new THREE.MeshStandardMaterial({color: 0x8B4513}));
+            trunk.position.y = 0.5;
+            const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.2, 8), new THREE.MeshStandardMaterial({color: 0x115511}));
+            leaves.position.y = 1.4;
+            group.add(trunk); group.add(leaves);
+            group.position.set(x, 0, z);
+            scene.add(group);
+        }
+        for(let i=0; i<15; i++) createTree(Math.random()*30-15, Math.random()*20-25);
+
+        // ၄။ လူနှစ်ယောက်
+        function createPerson(skin, shirt) {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.6, 0.2), new THREE.MeshStandardMaterial({color: shirt}));
+            body.position.y = 0.8;
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: skin}));
+            head.position.y = 1.25;
+            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 0.1), new THREE.MeshStandardMaterial({color: 0x222222}));
+            lLeg.position.set(-0.1, 0.25, 0);
+            const rLeg = lLeg.clone(); rLeg.position.set(0.1, 0.25, 0);
+            g.add(body); g.add(head); g.add(lLeg); g.add(rLeg);
+            return { g, lLeg, rLeg };
+        }
+        const man = createPerson(0xffdbac, 0x0055ff); man.g.position.x = -0.5; scene.add(man.g);
+        const woman = createPerson(0xffdbac, 0xff33aa); woman.g.position.x = 0.5; scene.add(woman.g);
+
+        camera.position.set(0, 4, 8);
+        camera.lookAt(0, 0, 0);
+
+        let t = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            t += 0.05;
+            man.lLeg.rotation.x = Math.sin(t) * 0.5; man.rLeg.rotation.x = -Math.sin(t) * 0.5;
+            woman.lLeg.rotation.x = -Math.sin(t) * 0.5; woman.rLeg.rotation.x = Math.sin(t) * 0.5;
+            
+            // အိမ်ဆီကို လမ်းလျှောက်သွားခြင်း
+            if(man.g.position.z > -12) {
+                man.g.position.z -= 0.02;
+                woman.g.position.z -= 0.02;
+            }
+            camera.position.z = man.g.position.z + 7;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
