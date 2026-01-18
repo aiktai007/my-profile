@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <title>Shimhkam Space Fighter Pro</title>
+    <style>
+        body { background: #000; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
+        canvas { background: url('https://i.imgur.com/8S7Xp9X.png'); border-bottom: 4px solid #ff0050; }
+        .stats { position: absolute; top: 10px; left: 10px; text-align: left; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; }
+        .score { color: #00ff00; font-size: 20px; }
+        .high-score { color: #ffca28; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="stats">
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="high-score">Best: <span id="best">0</span></div>
+        <div id="level" style="color: #00f2ff;">Level: 1</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let level = 1;
+        let highScore = localStorage.getItem("shooterHighScore") || 0;
+        document.getElementById("best").innerText = highScore;
+
+        let player = { x: canvas.width/2, y: canvas.height - 80, w: 50, h: 50, color: "#00f2ff" };
+        let bullets = [];
+        let enemies = [];
+        let enemySpeed = 2;
+
+        // Mouse/Touch ထိန်းချုပ်မှု
+        window.addEventListener("mousemove", (e) => { player.x = e.clientX - player.w/2; });
+        window.addEventListener("mousedown", () => {
+            bullets.push({ x: player.x + player.w/2, y: player.y, r: 5, color: "#ff0050" });
+        });
+
+        function spawnEnemy() {
+            let size = 30 + Math.random() * 20;
+            enemies.push({ x: Math.random() * (canvas.width - size), y: -size, w: size, h: size, speed: enemySpeed + Math.random() * 2 });
+        }
+        let enemyTimer = setInterval(spawnEnemy, 1000);
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Level တက်အောင်လုပ်ခြင်း (အမှတ် ၅၀ တိုင်း Level တက်)
+            let newLevel = Math.floor(score / 50) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                enemySpeed += 0.5;
+                document.getElementById("level").innerText = "Level: " + level;
+            }
+
+            // Player ဆွဲခြင်း
+            ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.shadowBlur = 0;
+
+            // Bullets
+            bullets.forEach((b, i) => {
+                b.y -= 10;
+                ctx.fillStyle = b.color;
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
+                if(b.y < 0) bullets.splice(i, 1);
+            });
+
+            // Enemies
+            enemies.forEach((en, ei) => {
+                en.y += en.speed;
+                ctx.fillStyle = "red";
+                ctx.fillRect(en.x, en.y, en.w, en.h);
+
+                // Collision (ထိမှန်မှု)
+                bullets.forEach((b, bi) => {
+                    if(b.x > en.x && b.x < en.x + en.w && b.y > en.y && b.y < en.y + en.h) {
+                        enemies.splice(ei, 1);
+                        bullets.splice(bi, 1);
+                        score += 10;
+                        document.getElementById("score").innerText = score;
+                    }
+                });
+
+                // Game Over
+                if(en.y > canvas.height) {
+                    if(score > highScore) localStorage.setItem("shooterHighScore", score);
+                    alert("Game Over! Level: " + level + " | Score: " + score);
+                    location.reload();
+                }
+            });
+
+            requestAnimationFrame(update);
+        }
+        update();
+    </script>
+</body>
+</html>
