@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shimhkam 3D World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; overflow: hidden; background: #87CEEB; } /* ကောင်းကင်ပြာရောင် */
+        #ui { position: absolute; bottom: 20px; width: 100%; text-align: center; color: white; font-family: sans-serif; text-shadow: 2px 2px 4px #000; }
+    </style>
+</head>
+<body>
+    <div id="ui">လက်နဲ့ ထိပြီး ပတ်ပတ်လည် လှည့်ကြည့်ပါ</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ၁။ Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Sky Blue
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // ၂။ အလင်းရောင် (နေရောင်ခြည်ပုံစံ)
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 10, 7.5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // ၃။ မြေကွက်လပ် (Minecraft Grass blocks လိုမျိုး စီခြင်း)
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        
+        for (let x = -5; x <= 5; x++) {
+            for (let z = -5; z <= 5; z++) {
+                // မြက်ခင်းအရောင် စိမ်းဖန့်ဖန့်လေးတွေ
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: Math.random() > 0.5 ? 0x32a852 : 0x228b22 
+                });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(x, 0, z);
+                scene.add(cube);
+            }
+        }
+
+        camera.position.set(0, 5, 10);
+        camera.lookAt(0, 0, 0);
+
+        // ၄။ Mouse သို့မဟုတ် Touch နဲ့ လှည့်ကြည့်ဖို့ Logic
+        let isDragging = false;
+        let previousMouseX = 0;
+
+        document.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - previousMouseX;
+                scene.rotation.y += deltaX * 0.01;
+            }
+            previousMouseX = e.clientX;
+        });
+
+        // ဖုန်းအတွက် Touch Controls
+        document.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            previousMouseX = e.touches[0].clientX;
+        });
+        document.addEventListener('touchend', () => isDragging = false);
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const deltaX = e.touches[0].clientX - previousMouseX;
+                scene.rotation.y += deltaX * 0.01;
+                previousMouseX = e.touches[0].clientX;
+            }
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
